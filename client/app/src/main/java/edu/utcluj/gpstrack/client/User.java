@@ -1,4 +1,4 @@
-package edu.utcluj.gpstrack.client.room;
+package edu.utcluj.gpstrack.client;
 
 import java.io.Serializable;
 
@@ -8,46 +8,29 @@ import androidx.room.PrimaryKey;
 @Entity
 public class User implements Serializable {
 
-    @PrimaryKey(autoGenerate = true)
-    private long id;
     private String email;
     private String password;
+    private String token;
 
-    public User(String email, String password) {
+    public User(String email, String password, String token) {
         this.email = email;
         this.password = password;
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
+        this.token = token;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public String getToken() {
+        return token;
     }
 
     @Override
     public String toString() {
         return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
+                "email='" + email + '\'' +
+                ", token='" + token + '\'' +
                 '}';
     }
 }

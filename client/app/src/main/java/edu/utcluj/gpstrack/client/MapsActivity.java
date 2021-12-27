@@ -1,10 +1,5 @@
 package edu.utcluj.gpstrack.client;
 
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
@@ -124,11 +124,12 @@ public class MapsActivity extends AppCompatActivity {
             HttpURLConnection con = null;
 
             try {
-                String endpointURL = "http://" + GlobalData.getEndpoint() + "/positions";
+                String endpointURL = "http://" + GlobalData.getEndpoint() + "/api/positions";
                 URL obj = new URL(endpointURL);
                 con = (HttpURLConnection) obj.openConnection();
                 con.setRequestMethod("POST");
                 con.setRequestProperty("User-Agent", "Mozilla/5.0");
+                con.setRequestProperty("Authorization", "Bearer " + GlobalData.getLoggedInUser().getToken());
                 con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
 
                 con.setDoOutput(true);

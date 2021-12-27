@@ -1,8 +1,5 @@
 package edu.utcluj.gpstrack.client;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.room.Room;
-
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,12 +11,20 @@ import android.util.Patterns;
 import android.view.View;
 import android.widget.EditText;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 
-import edu.utcluj.gpstrack.client.room.User;
-import edu.utcluj.gpstrack.client.room.UserDao;
-import edu.utcluj.gpstrack.client.room.UserDataBase;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -27,7 +32,13 @@ public class MainActivity extends AppCompatActivity {
     private EditText password;
     private TextInputLayout emailLayout;
     private TextInputLayout passwordLayout;
-    private UserDao userDao;
+
+    private static final String STATIC_USER = "{" +
+            "\"email\":\"%s\"," +
+            "\"password\":\"%s\"" +
+            "}";
+
+    private final Executor executor = Executors.newFixedThreadPool(1);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +56,6 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         }
-
-        UserDataBase userDataBase = Room.databaseBuilder(this, UserDataBase.class, GlobalData.USERS_DB_NAME).allowMainThreadQueries().build();
-        userDao = userDataBase.getUserDao();
 
         email = findViewById(R.id.text_field_email_value);
         password = findViewById(R.id.text_field_password_value);
@@ -100,16 +108,7 @@ public class MainActivity extends AppCompatActivity {
         String passwordValue = password.getText().toString().trim();
 
         if (!emailValue.isEmpty() && !passwordValue.isEmpty()) {
-            User user = userDao.getUser(emailValue, passwordValue);
-
-            if (user != null) {
-                GlobalData.setLoggedInUser(user, view.getContext());
-
-                Intent intent = new Intent(view.getContext(), MapsActivity.class);
-                startActivity(intent);
-            } else {
-                emailLayout.setError(getString(R.string.error_wrong_credentials));
-            }
+            sendLogin(emailValue, passwordValue, view);
         } else {
             if (emailValue.isEmpty()) {
                 emailLayout.setError(getString(R.string.error_required));
@@ -128,5 +127,73 @@ public class MainActivity extends AppCompatActivity {
     public void beginRegister(View view) {
         Intent intent = new Intent(view.getContext(), RegisterActivity.class);
         startActivity(intent);
+    }
+
+    private boolean tryLogin(String emailInput, String passwordInput, View view) {
+        if (emailInput != null && passwordInput != null) {
+            HttpURLConnection con = null;
+
+            try {
+                String endpointURL = "http://" + GlobalData.getEndpoint() + "/api/auth/signin";
+                URL obj = new URL(endpointURL);
+                con = (HttpURLConnection) obj.openConnection();
+                con.setRequestMethod("POST");
+                con.setRequestProperty("User-Agent", "Mozilla/5.0");
+                con.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+
+                con.setDoOutput(true);
+                OutputStream os = con.getOutputStream();
+                os.write(String.format(STATIC_USER, emailInput, passwordInput).getBytes());
+                os.flush();
+                os.close();
+
+                int responseCode = con.getResponseCode();
+
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+                    String inputLine;
+                    StringBuilder response = new StringBuilder();
+
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+
+                    in.close();
+
+                    Gson gson = new Gson();
+                    String token = gson.fromJson(response.toString(), Response.class).getToken();
+                    User newUser = new User(emailInput, passwordInput, token);
+                    GlobalData.setLoggedInUser(newUser, view.getContext());
+
+                    Intent intent = new Intent(view.getContext(), MapsActivity.class);
+                    startActivity(intent);
+
+                    return true;
+                } else if (responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) {
+                    Snackbar.make(view, R.string.wrong_email_pass, BaseTransientBottomBar.LENGTH_LONG).show();
+                    return false;
+                } else {
+                    Snackbar.make(view, R.string.connection_failed, BaseTransientBottomBar.LENGTH_LONG).show();
+                    return false;
+                }
+            } catch (Exception e) {
+                Snackbar.make(view, R.string.connection_failed, BaseTransientBottomBar.LENGTH_LONG).show();
+                return false;
+            } finally {
+                if (con != null) {
+                    con.disconnect();
+                }
+            }
+        } else {
+            Snackbar.make(view, R.string.connection_failed, BaseTransientBottomBar.LENGTH_LONG).show();
+            return false;
+        }
+    }
+
+    public void sendLogin(String emailInput, String passwordInput, View view) {
+        executor.execute(() -> {
+            tryLogin(emailInput, passwordInput, view);
+        });
     }
 }

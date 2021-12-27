@@ -6,8 +6,6 @@ import android.preference.PreferenceManager;
 
 import com.google.gson.Gson;
 
-import edu.utcluj.gpstrack.client.room.User;
-
 public abstract class GlobalData {
     public final static String USERS_DB_NAME = "users.db";
     public final static String LOGGED_IN_USER = "LOGGED_IN_USER";
