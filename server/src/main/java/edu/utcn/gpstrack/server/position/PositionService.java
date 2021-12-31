@@ -1,6 +1,7 @@
 package edu.utcn.gpstrack.server.position;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class PositionService {
 
-    private final PositionRepository positionRepository;
-
-    public PositionService(PositionRepository positionRepository) {
-        this.positionRepository = positionRepository;
-    }
+    @Autowired
+    PositionRepository positionRepository;
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PositionDTO create(PositionDTO position) {
@@ -35,9 +33,9 @@ public class PositionService {
     }
 
     @Transactional
-    public List<PositionDTO> readAll(Date startDate, Date endDate) {
-        if (!startDate.toString().isEmpty() && !endDate.toString().isEmpty()) {
-            return positionRepository.findAllBetweenDates(startDate, endDate).stream().map(this::convertToDTO).collect(Collectors.toList());
+    public List<PositionDTO> readAll(Date startDate, Date endDate, String terminalId) {
+        if (!startDate.toString().isEmpty() && !endDate.toString().isEmpty() && terminalId != null && !terminalId.isEmpty()) {
+            return positionRepository.findAllBetweenDates(startDate, endDate, terminalId).stream().map(this::convertToDTO).collect(Collectors.toList());
         } else {
             return positionRepository.findAll().stream().map(this::convertToDTO).collect(Collectors.toList());
         }

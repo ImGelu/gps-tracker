@@ -13,6 +13,6 @@ import java.util.List;
  */
 public interface PositionRepository extends JpaRepository<Position, Integer> {
 
-    @Query("SELECT p FROM Position p WHERE p.creationDate >= :startDate AND p.creationDate <= :endDate")
-    List<Position> findAllBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate);
+    @Query("SELECT p FROM Position p WHERE p.creationDate >= :startDate AND p.creationDate <= :endDate AND p.terminalId = :terminalId")
+    List<Position> findAllBetweenDates(@Param("startDate") Date startDate, @Param("endDate") Date endDate, @Param("terminalId") String terminalId);
 }

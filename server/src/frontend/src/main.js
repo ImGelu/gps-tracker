@@ -13,7 +13,7 @@ Vue.config.productionTip = false
 
 Vue.use(VueGoogleMaps, {
   load: {
-    key: 'AIzaSyB76CFJDxTCbj_WFZiAwzWw8rEhhTPPAg0',
+    key: 'YOUR_GOOGLE_API_KEY_HERE',
     libraries: 'places',
   }
 });

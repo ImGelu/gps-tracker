@@ -1,5 +1,6 @@
 package edu.utcn.gpstrack.server.position;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
@@ -10,15 +11,13 @@ import java.util.List;
  * @author Radu Miron
  * @version 1
  */
+@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
-@RequestMapping("/positions")
+@RequestMapping("/api/positions")
 public class PositionController {
 
-    private final PositionService positionService;
-
-    public PositionController(PositionService positionService) {
-        this.positionService = positionService;
-    }
+    @Autowired
+    PositionService positionService;
 
     @PostMapping
     public PositionDTO create(@RequestBody PositionDTO position) {
@@ -26,8 +25,8 @@ public class PositionController {
     }
 
     @GetMapping
-    public List<PositionDTO> readAll(@RequestParam(name = "startDate", required = false, defaultValue = "1000-01-01") String startDate, @RequestParam(name = "endDate", required = false, defaultValue = "9999-01-01") String endDate) throws ParseException {
-        return positionService.readAll(new SimpleDateFormat("yyyy-MM-dd").parse(startDate), new SimpleDateFormat("yyyy-MM-dd").parse(endDate));
+    public List<PositionDTO> readAll(@RequestParam(name = "startDate", required = false, defaultValue = "1000-01-01") String startDate, @RequestParam(name = "endDate", required = false, defaultValue = "9999-01-01") String endDate, @RequestParam(name = "terminalId", required = false) String terminalId) throws ParseException {
+        return positionService.readAll(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(startDate), new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(endDate), terminalId);
     }
 
     @GetMapping("/{id}")
